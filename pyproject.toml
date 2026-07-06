@@ -1,0 +1,39 @@
+[project]
+name = "eei-global"
+version = "0.1.0"
+description = "Ringberg Group 3 results"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp",
+    "bottleneck",
+    "cftime",
+    "cmocean",
+    "cython",
+    "easygems",
+    "flox",
+    "fsspec",
+    "ipykernel",
+    "ipython",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pip",
+    "pytest",
+    "requests",
+    "ruff",
+    "scipy",
+    "seaborn",
+    "setuptools>=80.9.0",
+    "statsmodels",
+    "wheel",
+    "xarray",
+    "xhistogram",
+    "zarr>2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "eei-global",
+]
+
