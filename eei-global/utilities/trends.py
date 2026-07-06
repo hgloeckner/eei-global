@@ -58,12 +58,12 @@ def create_trend_ds(startyears, endyears):
     )
 
 
-def add_cmip_to_data(data, dscmip, forcing):
+def add_cmip_to_data(data, dscmip, forcing, newvar, **kwargs):
     ftrend = []
     for startyear in data.startyear.values:
         for endyear in data.endyear.values:
             res = ustats.get_trends_for_cmip(
-                dscmip.sel(forcing=forcing), startyear, np.ceil(endyear)
+                dscmip.sel(forcing=forcing), startyear, np.ceil(endyear), **kwargs
             )
             ftrend.append(
                 xr.concat(
@@ -74,9 +74,9 @@ def add_cmip_to_data(data, dscmip, forcing):
                     dim="value",
                 ).expand_dims({"startyear": [startyear], "endyear": [endyear]})
             )
-    return data.assign(rfmipf=10 * xr.merge(ftrend).to_dataarray().squeeze()).drop_vars(
-        ["variable", "forcing"]
-    )
+    return data.assign(
+        **{newvar: 10 * xr.merge(ftrend).to_dataarray().squeeze()}
+    ).drop_vars(["variable", "forcing"])
 
 
 def add_ceres(data, ceres, alpha):
