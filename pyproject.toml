@@ -17,6 +17,7 @@ dependencies = [
     "ipython",
     "matplotlib",
     "numpy",
+    "netcdf4",
     "pandas",
     "pip",
     "pytest",
