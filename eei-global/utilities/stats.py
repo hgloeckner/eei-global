@@ -44,14 +44,14 @@ def linear_trend_np(years, values, alpha, nlags, only_slope=True, calc_cierr=Tru
         else:
             return reg, tstat * sb
     else:
-        return reg
+        if only_slope:
+            return reg.slope, np.nan
+        else:
+            return reg
 
 
 def linear_trend(da, calc_cierr=True, alpha=0.975, nlags=25, only_slope=True):
-    if "year" in da.dims:
-        Ndet = da
-    else:
-        Ndet = normalize_by_climatology(da).swap_dims({"time": "year"})
+    Ndet = normalize_by_climatology(da)
     if np.any(np.isnan(Ndet.values)):
         warnings.warn(
             "NaN values found in data - probably not covering the full period, dropping NaN values for linear regression.\n"
@@ -72,13 +72,14 @@ def trend_unc_from_meas_unc(uncsigma):
     return np.sqrt(1 / (np.sum(w * (uncsigma.year - uncsigma.year.mean()) ** 2)))
 
 
-def get_trends_for_cmip(ds, startyear, endyear, alpha=0.975, nlags=48):
+def get_trends_for_cmip(ds, startyear, endyear, varname="N", alpha=0.975, nlags=48, calc_cierr=True):
+    ds = normalize_by_climatology(ds)
     return xr.apply_ufunc(
         linear_trend_np,
         ds.sel(year=slice(startyear, endyear)).year,
-        ds.sel(year=slice(startyear, endyear)).N,
+        ds.sel(year=slice(startyear, endyear))[varname],
         input_core_dims=[["time"], ["time"]],
         output_core_dims=[[], []],
-        kwargs=dict(alpha=alpha, nlags=nlags),
+        kwargs=dict(alpha=alpha, nlags=nlags, calc_cierr=calc_cierr),
         vectorize=True,
     )

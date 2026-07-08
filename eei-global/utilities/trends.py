@@ -3,37 +3,37 @@ import xarray as xr
 import utilities.stats as ustats
 
 
-def fclr(da, cloud_fraction, weights=None):
-    if weights is None:
-        weights = np.cos(np.deg2rad(da.lat))
-        weights = weights.expand_dims({"lon": da.lon})
-    return ((1 - cloud_fraction / 100) * da * weights).sum(
-        ["lat", "lon"]
-    ) / weights.sum(["lat", "lon"])
+
+def calc_fclrcon(da, cloud_fraction):
+    return (1 - cloud_fraction / 100) * da
+
+def add_resolved_fclr(ds):
+    # keep signs of OLR and Fsw out 
+    return ds.assign(
+        Fclrsw = calc_fclrcon(ds.toa_sw_clr_c_mon, ds.cldarea_total_daynight_mon),
+        Fclrlw = calc_fclrcon(ds.toa_lw_clr_c_mon, ds.cldarea_total_daynight_mon),
+    )
 
 
 def add_weighted(ds):
     # weighted cloud and cs contributions as in Loeb et al 2024
     weights = np.cos(np.deg2rad(ds.lat))
     weights = weights.expand_dims({"lon": ds.lon})
-    clr = ds.assign(
-        Fclrnet=fclr(
-            ds.toa_net_clr_c_mon, ds.cldarea_total_daynight_mon, weights=weights
-        ),
-        Fclrsw=fclr(
-            ds.solar_mon - ds.toa_sw_clr_c_mon,
-            ds.cldarea_total_daynight_mon,
-            weights=weights,
-        ),
-        Fclrlw=fclr(
-            -ds.toa_lw_clr_c_mon, ds.cldarea_total_daynight_mon, weights=weights
-        ),
-    )
+    clr = add_resolved_fclr(ds)
+    clrlwmean = clr.Fclrlw.weighted(weights).mean(["lat", "lon"])
+    clrswmean = clr.Fclrsw.weighted(weights).mean(["lat", "lon"])
+    solarmean = ds.solar_mon.weighted(weights).mean(["lat", "lon"])
+
     return clr.assign(
-        Fcldnet=ds.toa_net_all_mon.weighted(weights).mean(["lat", "lon"]) - clr.Fclrnet,
-        Fcldsw=(ds.solar_mon - ds.toa_sw_all_mon).weighted(weights).mean(["lat", "lon"])
-        - clr.Fclrsw,
-        Fcldlw=-(ds.toa_lw_all_mon).weighted(weights).mean(["lat", "lon"]) - clr.Fclrlw,
+        Fclrnetmean=solarmean - clrswmean - clrlwmean,
+        Fclrlwmean=clrlwmean,
+        Fclrswmean=clrswmean,
+        solarmean=solarmean,
+        Fcldnetmean=ds.toa_net_all_mon.weighted(weights).mean(["lat", "lon"]) - 
+        (solarmean - clrswmean - clrlwmean),
+        Fcldswmean=(ds.toa_sw_all_mon).weighted(weights).mean(["lat", "lon"])
+        - clrswmean,
+        Fcldlwmean=(ds.toa_lw_all_mon).weighted(weights).mean(["lat", "lon"]) - clrlwmean,
     )
 
 
@@ -76,7 +76,7 @@ def add_cmip_to_data(data, dscmip, forcing, newvar, **kwargs):
             )
     return data.assign(
         **{newvar: 10 * xr.merge(ftrend).to_dataarray().squeeze()}
-    ).drop_vars(["variable", "forcing"])
+    ).drop_vars(["variable"])
 
 
 def add_ceres(data, ceres, alpha):
@@ -158,12 +158,12 @@ def add_weighted_ceres(data, ceres, alpha):
                             for startyear in data.startyear.values
                         ]
                         for da in [
-                            ceres.Fcldnet,
-                            ceres.Fclrnet,
-                            ceres.Fclrlw,
-                            ceres.Fcldlw,
-                            ceres.Fclrsw,
-                            ceres.Fcldsw,
+                            ceres.Fcldnetmean,
+                            ceres.Fclrnetmean,
+                            -ceres.Fclrlwmean,
+                            -ceres.Fcldlwmean,
+                            ceres.solarmean-ceres.Fclrswmean,
+                            -ceres.Fcldswmean,
                         ]
                     ]
                 ),
