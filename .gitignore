@@ -7,4 +7,6 @@ __pycache__
 *.jpg
 *.jpeg
 
+*_gridded.nc
 
+*FluxByCldTyp*.nc
