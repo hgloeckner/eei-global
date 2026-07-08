@@ -3,15 +3,15 @@ import xarray as xr
 import utilities.stats as ustats
 
 
-
 def calc_fclrcon(da, cloud_fraction):
     return (1 - cloud_fraction / 100) * da
 
+
 def add_resolved_fclr(ds):
-    # keep signs of OLR and Fsw out 
+    # keep signs of OLR and Fsw out
     return ds.assign(
-        Fclrsw = calc_fclrcon(ds.toa_sw_clr_c_mon, ds.cldarea_total_daynight_mon),
-        Fclrlw = calc_fclrcon(ds.toa_lw_clr_c_mon, ds.cldarea_total_daynight_mon),
+        Fclrsw=calc_fclrcon(ds.toa_sw_clr_c_mon, ds.cldarea_total_daynight_mon),
+        Fclrlw=calc_fclrcon(ds.toa_lw_clr_c_mon, ds.cldarea_total_daynight_mon),
     )
 
 
@@ -29,11 +29,12 @@ def add_weighted(ds):
         Fclrlwmean=clrlwmean,
         Fclrswmean=clrswmean,
         solarmean=solarmean,
-        Fcldnetmean=ds.toa_net_all_mon.weighted(weights).mean(["lat", "lon"]) - 
-        (solarmean - clrswmean - clrlwmean),
+        Fcldnetmean=ds.toa_net_all_mon.weighted(weights).mean(["lat", "lon"])
+        - (solarmean - clrswmean - clrlwmean),
         Fcldswmean=(ds.toa_sw_all_mon).weighted(weights).mean(["lat", "lon"])
         - clrswmean,
-        Fcldlwmean=(ds.toa_lw_all_mon).weighted(weights).mean(["lat", "lon"]) - clrlwmean,
+        Fcldlwmean=(ds.toa_lw_all_mon).weighted(weights).mean(["lat", "lon"])
+        - clrlwmean,
     )
 
 
@@ -162,7 +163,7 @@ def add_weighted_ceres(data, ceres, alpha):
                             ceres.Fclrnetmean,
                             -ceres.Fclrlwmean,
                             -ceres.Fcldlwmean,
-                            ceres.solarmean-ceres.Fclrswmean,
+                            ceres.solarmean - ceres.Fclrswmean,
                             -ceres.Fcldswmean,
                         ]
                     ]

@@ -72,7 +72,9 @@ def trend_unc_from_meas_unc(uncsigma):
     return np.sqrt(1 / (np.sum(w * (uncsigma.year - uncsigma.year.mean()) ** 2)))
 
 
-def get_trends_for_cmip(ds, startyear, endyear, varname="N", alpha=0.975, nlags=48, calc_cierr=True):
+def get_trends_for_cmip(
+    ds, startyear, endyear, varname="N", alpha=0.975, nlags=48, calc_cierr=True
+):
     ds = normalize_by_climatology(ds)
     return xr.apply_ufunc(
         linear_trend_np,
