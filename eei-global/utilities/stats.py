@@ -14,7 +14,7 @@ def assign_year(ds):
 
 def normalize_by_climatology(ds):
     if "time" in ds.dims:
-        ds = ds.groupby("time.month") - ds.groupby("time.month").mean()
+        ds = ds.groupby("time.month") - ds.groupby("time.month").mean("time")
         return assign_year(ds)
     else:
         return ds

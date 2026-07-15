@@ -23,7 +23,6 @@ def add_weighted(ds):
     clrlwmean = clr.Fclrlw.weighted(weights).mean(["lat", "lon"])
     clrswmean = clr.Fclrsw.weighted(weights).mean(["lat", "lon"])
     solarmean = ds.solar_mon.weighted(weights).mean(["lat", "lon"])
-
     return clr.assign(
         Fclrnetmean=solarmean - clrswmean - clrlwmean,
         Fclrlwmean=clrlwmean,

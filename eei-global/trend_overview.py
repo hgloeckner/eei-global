@@ -36,9 +36,7 @@ cmip_ftrend.append(
         dim="value",
     ).expand_dims({"startyear": [startyear], "endyear": [endyear]})
 )
-rfmipf = (
-    xr.merge(cmip_ftrend).to_dataarray().squeeze().drop_vars(["variable", "forcing"])
-)
+rfmipf = xr.merge(cmip_ftrend).to_dataarray().squeeze().drop_vars(["variable"])
 # %%
 alpha = 0.95
 startyear = 2001
@@ -95,7 +93,7 @@ axes[1].set_xlabel("")
 axes[1].set_ylabel("F / W m$^{-2}$")
 axes[2].set_xlabel("Year")
 sns.despine(offset=5)
-fig.savefig("../graphics/trend_overview.pdf", bbox_inches="tight")
+# fig.savefig("../graphics/trend_overview.pdf", bbox_inches="tight")
 # %%
 norm_ceres = (
     ustats.normalize_by_climatology(ceres)
